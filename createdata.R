@@ -1,7 +1,7 @@
 ##Ian Pearse and Jasna Hodzic
 
 
-## Creating data from species level sheet
+## Creating plot-level data from species level sheet
 
 ###R libraries and functions
 library(vegan)
@@ -141,20 +141,60 @@ park.ab$SITEPLOT <- paste(park.ab$Site, park.ab$Plot)
 
 
 park<-rbind(park.ab, park.nohemi)
-head(park)
+
+##abundance and frequency
+
+
+
+
+
+
+### 02.16.2022 addition 
+parkhemi.original <- read.csv("parkhemirandom.csv"); 
+parkhemi <- parkhemi.original
+parkhemi <- parkhemi %>% filter(Area_sampled > 398 & Area_sampled < 401) ## allowing these plots in
+park <- read.csv("otherdatasheets/park.eco.csv")
+park <- park %>%
+  filter(SITEPLOT %in% parkhemi$SITEPLOT) ## restricting plot
+
+park$Species <- as.factor(park$Species); nlevels(park$Species)
+nlevels(park$Species)
+park.freq <- park %>% group_by(Species) %>% summarize(freq = length(Species),
+                                                      ab = sum(Pct_Cov)) %>% arrange(desc(freq));
+
+park.freq <- park.freq %>%
+  mutate(rank.freq = rownames(park.freq)); head(park.freq)
+
+write.csv(park.freq, "PARKHEMIFINAL/manuscript_rep/most_Recent/revisions/allab.csv")
+
+park.ab1 <- park.freq %>% arrange(desc(ab));
+park.ab1 <- park.ab1 %>% mutate(rank.ab = rownames(park.ab1)); head(park.ab1)
+
+hemi.freq <- park.ab1 %>% filter(Species %in% hnam)
+head(hemi.freq)
+## plotting
+ggplot(hemi.freq, aes(x= freq, y = ab)) + geom_point() + theme_bw()
+
+freqhead(park)
 park$SITEPLOT<-paste(park$Site, park$Plot);park$SITEPLOT
 
-## ok how many are of each genus
+## genus #
 park.hemi <- park[park$Species %in% hnam,];head(park.hemi)
 
 genus <- hemi %>% dplyr::select(Genus, Accepted.Symbol) %>% rename(Species = Accepted.Symbol)
+
+## mergeing
+
+hemi.freq. <- merge(hemi.freq,genus) %>% arrange(desc(ab)); head(hemi.freq.) ## adding in the Genus
+write.csv(hemi.freq., "otherdatasheets/hemi.freq.new.csv")
+####
 park.genus <- merge(park.hemi, genus)
 park.genus$Genus <- as.factor(park.genus$Genus)
 park.genus <- park.genus %>% distinct()
-sum(park.genus$Pct_Cov)
-park.genus.stat <- park.genus %>% select(Pct_Cov, Genus) %>% group_by(Genus) %>% summarize(tot = sum(Pct_Cov), ratio = tot/sum(park.genus$Pct_Cov)) %>%
-  arrange(desc(tot)); park.genus.stat
-
+total.ab <- as.numeric(sum(park.genus$Pct_Cov))
+park.genus.stat <- park.genus %>% select(Pct_Cov, Genus) %>% group_by(Genus) %>% summarize(tot = sum(Pct_Cov),
+                                                                                           percentage = (sum(Pct_Cov)/total.ab) * 100) %>%
+  arrange(desc(percentage)); park.genus.stat
 
 
 ## how many distinct hemiparasites
@@ -162,9 +202,48 @@ hemi.name <- park[park$Species %in% hnam,]
 hemi.name$Species <- as.factor(hemi.name$Species)
 hemi.name$Species <- droplevels(hemi.name$Species)
 nlevels(hemi.name$Species) ## we are losing some due to lat/long
+hemi.list <- as.character(levels(hemi.name$Species))
+##
+allhemi.stat <- park[park$Species %in% hemi.list,]
+allhemi.stat<-allhemi.stat %>% select(Pct_Cov,Species) %>% group_by(Species) %>% summarize(tot = sum(Pct_Cov)) 
+allhemi.stat
+write.csv(allhemi.stat, "hemi_ab_400.csv") ## ABUNDANCE BY SYMBOL
 
 
+hemhemi.species <- hemi[hemi$Accepted.Symbol %in% hemi.list,] ## Just you my friend. (non in synonymn symbol) how do we have 203...
+hemi.species <- hemi.species %>% select(!Synonym.Symbol) %>% distinct()  ## we have some definite repeats of the same symbol for different species,
 
+## but et's figure out the abundaunce
+## just top 3 genera
+
+#hemi.species <- hemi.species %>% filter(Genus %in% c("Castilleja", "Pedicularis", "Krameria" , "Comandra")) ## ok so 132
+hemi.ab.list <- as.character(levels(hemi.species$Accepted.Symbol))
+
+hemi.ab.list
+park.hemi.ab <- park[park$Species %in% hemi.ab.list,]
+head(park.hemi.ab)
+park.hemi.ab.stat<- park.hemi.ab%>% select(Pct_Cov,Species) %>% group_by(Species) %>% summarize(tot = sum(Pct_Cov)) %>%
+  arrange(desc(tot)); park.hemi.ab.stat
+
+write.csv(park.hemi.ab.stat, "hemi_ab_400.csv")
+
+## to know genus orh emi
+## all hemiparasites 
+hemi.ab.all <-merge()
+hemi.ab.data <- merge(hemi.species, park.hemi.ab.stat, by.y = "Species", by.x = "Accepted.Symbol") 
+hemi.ab.data %>% arrange(desc(tot)) ## interesting. ## should we do the analysis?
+
+## KRER seems suspicious ,
+## so we could do an analysis of the most common of the three biggest genera - Castilleja miniata, KRameria grayi, and PEdicularis bracteosa...
+
+## let's try for fun, CAMI12
+
+park.all <- park %>% select(Pct_Cov, Species)%>% group_by(Species) %>% summarize(tot = sum(Pct_Cov)) %>%
+  arrange(desc(tot)); head(park.all)
+
+## figurng out their abundaunce
+
+head(park.hemi)
 ###make a reduced datafrom where each row is a plot within site (i.e one sampling place within each park)
 
 
