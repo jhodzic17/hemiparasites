@@ -269,6 +269,8 @@ generic_graphing_function <- function(data, color, ylab, textual_note) {
           axis.line.x = element_blank(),
           axis.line.y = element_blank(),
           axis.text.y = element_blank(),
+          axis.title = element_text(size = 10), 
+          axis.text = element_text(size = 8),
           axis.ticks.y = element_blank())+
     labs(y = ylab,
          x = expression(""),
@@ -330,7 +332,7 @@ rich <- annotate_figure(rich, top = text_grob("Richness")); rich
 graph.null <- ggarrange(even, rich); graph.null
 graph.null <- annotate_figure(graph.null,    bottom = text_grob("Model Coefficients"), top = text_grob("Abundance",size = 14, vjust = 0.50))
 
-graph.null + ggsave("Figures/null.ab.tiff", height = 7, width = 7, dpi = 300)
+graph.null + ggsave("Figures/paper/null.ab.new.tiff", height = 6, width = 6, dpi = 600, units = "in")
 ggsave("null.png", height = 7, width = 7, dpi = 300) ##JDB - smaller file for sharing
 
 
@@ -417,7 +419,7 @@ parkhemi <- parkhemi %>% select(c(HEMIAB.log, HEMIAB, LAT, LONG, ALLEVEN_LOGIT, 
  
  write.csv(parkhemi, "PARKHEMIFINAL/manuscript_rep/most_Recent/revisions/parkhemi.pairs.minuszero.csv", row.names=F)
  
-#parkhemi <- read.csv("PARKHEMIFINAL/manuscript_rep/most_Recent/revisions/parkhemi.pairs.csv", row.names=F)
+parkhemi <- read.csv("PARKHEMIFINAL/manuscript_rep/most_Recent/revisions/parkhemi.pairs.csv", row.names=F)
 
  ##DO ANALYSIS OF REAL HEMIPARASITES IN PAIRED PLOTS
  ###
@@ -486,8 +488,7 @@ summary(null_coeff_tab_pair)
  ## FIGURES 
  
  parkhemi <- read.csv("PARKHEMIFINAL/manuscript_rep/most_Recent/revisions/parkhemi.pairs.minuszero.csv");summary(parkhemi)
- 
- hemidat<-parkhemi[which(parkhemi$HEMIAB>0),]
+hemidat<-parkhemi[which(parkhemi$HEMIAB>0),]
  
  nohemidat<-parkhemi[which(parkhemi$HEMIAB==0),]
  parkpair<-parkhemi[which(parkhemi$pair1%in%hemidat$pair1),]
@@ -660,8 +661,8 @@ library(ggplot2)
  graph.null <- ggarrange(even, rich); graph.null
  graph.null <-  annotate_figure(graph.null,    bottom = text_grob("Model Coefficients"), top = text_grob("Presence", size = 14, vjust = 0.5)); graph.null
  
- graph.null + ggsave("Figures/paper/presencenull.tiff", height = 7, width = 7, dpi = 300)
- graph.null
+ #graph.null + ggsave("Figures/paper/presencenull.tiff", height = 7, width = 7, dpi = 300)
+ #graph.null
  ##
  
  
